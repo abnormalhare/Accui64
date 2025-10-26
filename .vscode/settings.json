@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.csv": "plaintext",
+        "*.s": "plaintext",
+        "*.json": "jsonc",
+        "*.c": "c",
+        "*.asm": "masm",
+        "xhash": "cpp"
+    }
+}

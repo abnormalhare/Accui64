@@ -1,0 +1,364 @@
+#include "../inc/alu.hpp"
+#include "../inc/x64.hpp"
+
+#include "debug.cpp"
+
+void CPU::OP_00() {
+    ModRM *modrm = this->getModRM(RegType::R8, this->read(), this->read());
+    u32 disp;
+    u64 ptr = this->getModRMPtr(modrm, disp);
+    Reg *dst = new Reg(ptr);
+    Reg *src = this->toReg(modrm->reg);
+
+    if (this->checkExceptions(ptr, { ExceptionType::SS, GP, PF, AC, UD })) {
+        return;
+    }
+
+    add(this, modrm->reg_type, dst, src, dst);
+    this->writeReg(ptr, dst, modrm->reg_type);
+
+    debugPrint("ADD", modrm, disp, RM_R);
+
+    delete dst;
+}
+
+void CPU::OP_01() {
+    ModRM *modrm = this->getModRM(RegType::R32, this->read(), this->read());
+    u32 disp;
+    u64 ptr = this->getModRMPtr(modrm, disp);
+    Reg *dst = new Reg(ptr);
+    Reg *src = this->toReg(modrm->reg);
+
+    if (this->checkExceptions(ptr, { ExceptionType::SS, GP, PF, AC, UD })) {
+        return;
+    }
+
+    add(this, modrm->reg_type, dst, src, dst);
+    this->writeReg(ptr, dst, modrm->reg_type);
+
+    debugPrint("ADD", modrm, disp, RM_R);
+
+    delete dst;
+}
+
+void CPU::OP_02() {
+    ModRM *modrm = this->getModRM(RegType::R8, this->read(), this->read());
+    u32 disp;
+    Reg *dst = this->toReg(modrm->reg);
+    Reg *src = new Reg(this->getModRMPtr(modrm, disp));
+
+    add(this, modrm->reg_type, dst, src, dst);
+
+    debugPrint("ADD", modrm, disp, R_RM);
+
+    delete src;
+}
+
+void CPU::OP_03() {
+    ModRM *modrm = this->getModRM(RegType::R32, this->read(), this->read());
+    u32 disp;
+    Reg *dst = this->toReg(modrm->reg);
+    Reg *src = new Reg(this->getModRMPtr(modrm, disp));
+
+    add(this, modrm->reg_type, dst, src, dst);
+
+    debugPrint("ADD", modrm, disp, R_RM);
+
+    delete src;
+}
+
+void CPU::OP_04() {
+    Reg *dst = AX;
+    Reg *src = new Reg();
+    src->l = this->getVal8();
+
+    calcOp(this, RegType::R8, dst, src, dst, [](CPU *cpu, auto a, auto b) {
+        return a + b;
+    });
+
+    std::cout << "ADD AX, " << (int)src->l << std::endl;
+
+    delete src;
+}
+
+void CPU::OP_05() {
+    Reg *dst = AX;
+    Reg *src = new Reg();
+    RegType src_type;
+    u32 val;
+
+    if (this->extra_info.contains("op")) {
+        src_type = RegType::R16;
+        src->x = val = this->getVal16();
+    } else if (this->extra_info["rex"] & REXBit::W) {
+        src_type = RegType::R64;
+        src->r = val = this->getVal32();
+    } else {
+        src_type = RegType::R32;
+        src->e = val = this->getVal32();
+    }
+
+    calcOp(this, RegType::R8, dst, src, dst, [](CPU *cpu, auto a, auto b) {
+        return a + b;
+    });
+
+    std::cout << "ADD " << getRegName(0, src_type) << ", " << std::hex << val << std::endl;
+
+    delete src;
+}
+
+#define STUB_OP(hex) \
+void CPU::OP_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x" #hex << std::endl; this->HALT(); }
+
+STUB_OP(06)
+STUB_OP(07)
+STUB_OP(08)
+STUB_OP(09)
+STUB_OP(0A)
+STUB_OP(0B)
+STUB_OP(0C)
+STUB_OP(0D)
+STUB_OP(0E)
+STUB_OP(0F)
+STUB_OP(10)
+STUB_OP(11)
+STUB_OP(12)
+STUB_OP(13)
+STUB_OP(14)
+STUB_OP(15)
+STUB_OP(16)
+STUB_OP(17)
+STUB_OP(18)
+STUB_OP(19)
+STUB_OP(1A)
+STUB_OP(1B)
+STUB_OP(1C)
+STUB_OP(1D)
+STUB_OP(1E)
+STUB_OP(1F)
+STUB_OP(20)
+STUB_OP(21)
+STUB_OP(22)
+STUB_OP(23)
+STUB_OP(24)
+STUB_OP(25)
+STUB_OP(26)
+STUB_OP(27)
+STUB_OP(28)
+STUB_OP(29)
+STUB_OP(2A)
+STUB_OP(2B)
+STUB_OP(2C)
+STUB_OP(2D)
+STUB_OP(2E)
+STUB_OP(2F)
+STUB_OP(30)
+STUB_OP(31)
+STUB_OP(32)
+STUB_OP(33)
+STUB_OP(34)
+STUB_OP(35)
+STUB_OP(36)
+STUB_OP(37)
+STUB_OP(38)
+STUB_OP(39)
+STUB_OP(3A)
+STUB_OP(3B)
+STUB_OP(3C)
+STUB_OP(3D)
+STUB_OP(3E)
+STUB_OP(3F)
+STUB_OP(40)
+STUB_OP(41)
+STUB_OP(42)
+STUB_OP(43)
+STUB_OP(44)
+STUB_OP(45)
+STUB_OP(46)
+STUB_OP(47)
+STUB_OP(48)
+STUB_OP(49)
+STUB_OP(4A)
+STUB_OP(4B)
+STUB_OP(4C)
+STUB_OP(4D)
+STUB_OP(4E)
+STUB_OP(4F)
+STUB_OP(50)
+STUB_OP(51)
+STUB_OP(52)
+STUB_OP(53)
+STUB_OP(54)
+STUB_OP(55)
+STUB_OP(56)
+STUB_OP(57)
+STUB_OP(58)
+STUB_OP(59)
+STUB_OP(5A)
+STUB_OP(5B)
+STUB_OP(5C)
+STUB_OP(5D)
+STUB_OP(5E)
+STUB_OP(5F)
+STUB_OP(60)
+STUB_OP(61)
+STUB_OP(62)
+STUB_OP(63)
+STUB_OP(64)
+STUB_OP(65)
+STUB_OP(66)
+STUB_OP(67)
+STUB_OP(68)
+STUB_OP(69)
+STUB_OP(6A)
+STUB_OP(6B)
+STUB_OP(6C)
+STUB_OP(6D)
+STUB_OP(6E)
+STUB_OP(6F)
+STUB_OP(70)
+STUB_OP(71)
+STUB_OP(72)
+STUB_OP(73)
+STUB_OP(74)
+STUB_OP(75)
+STUB_OP(76)
+STUB_OP(77)
+STUB_OP(78)
+STUB_OP(79)
+STUB_OP(7A)
+STUB_OP(7B)
+STUB_OP(7C)
+STUB_OP(7D)
+STUB_OP(7E)
+STUB_OP(7F)
+STUB_OP(80)
+STUB_OP(81)
+STUB_OP(82)
+STUB_OP(83)
+STUB_OP(84)
+STUB_OP(85)
+STUB_OP(86)
+STUB_OP(87)
+STUB_OP(88)
+STUB_OP(89)
+STUB_OP(8A)
+STUB_OP(8B)
+STUB_OP(8C)
+STUB_OP(8D)
+STUB_OP(8E)
+STUB_OP(8F)
+STUB_OP(90)
+STUB_OP(91)
+STUB_OP(92)
+STUB_OP(93)
+STUB_OP(94)
+STUB_OP(95)
+STUB_OP(96)
+STUB_OP(97)
+STUB_OP(98)
+STUB_OP(99)
+STUB_OP(9A)
+STUB_OP(9B)
+STUB_OP(9C)
+STUB_OP(9D)
+STUB_OP(9E)
+STUB_OP(9F)
+STUB_OP(A0)
+STUB_OP(A1)
+STUB_OP(A2)
+STUB_OP(A3)
+STUB_OP(A4)
+STUB_OP(A5)
+STUB_OP(A6)
+STUB_OP(A7)
+STUB_OP(A8)
+STUB_OP(A9)
+STUB_OP(AA)
+STUB_OP(AB)
+STUB_OP(AC)
+STUB_OP(AD)
+STUB_OP(AE)
+STUB_OP(AF)
+STUB_OP(B0)
+STUB_OP(B1)
+STUB_OP(B2)
+STUB_OP(B3)
+STUB_OP(B4)
+STUB_OP(B5)
+STUB_OP(B6)
+STUB_OP(B7)
+STUB_OP(B8)
+STUB_OP(B9)
+STUB_OP(BA)
+STUB_OP(BB)
+STUB_OP(BC)
+STUB_OP(BD)
+STUB_OP(BE)
+STUB_OP(BF)
+STUB_OP(C0)
+STUB_OP(C1)
+STUB_OP(C2)
+STUB_OP(C3)
+STUB_OP(C4)
+STUB_OP(C5)
+STUB_OP(C6)
+STUB_OP(C7)
+STUB_OP(C8)
+STUB_OP(C9)
+STUB_OP(CA)
+STUB_OP(CB)
+STUB_OP(CC)
+STUB_OP(CD)
+STUB_OP(CE)
+STUB_OP(CF)
+STUB_OP(D0)
+STUB_OP(D1)
+STUB_OP(D2)
+STUB_OP(D3)
+STUB_OP(D4)
+STUB_OP(D5)
+STUB_OP(D6)
+STUB_OP(D7)
+STUB_OP(D8)
+STUB_OP(D9)
+STUB_OP(DA)
+STUB_OP(DB)
+STUB_OP(DC)
+STUB_OP(DD)
+STUB_OP(DE)
+STUB_OP(DF)
+STUB_OP(E0)
+STUB_OP(E1)
+STUB_OP(E2)
+STUB_OP(E3)
+STUB_OP(E4)
+STUB_OP(E5)
+STUB_OP(E6)
+STUB_OP(E7)
+STUB_OP(E8)
+STUB_OP(E9)
+STUB_OP(EA)
+STUB_OP(EB)
+STUB_OP(EC)
+STUB_OP(ED)
+STUB_OP(EE)
+STUB_OP(EF)
+STUB_OP(F0)
+STUB_OP(F1)
+STUB_OP(F2)
+STUB_OP(F3)
+STUB_OP(F4)
+STUB_OP(F5)
+STUB_OP(F6)
+STUB_OP(F7)
+STUB_OP(F8)
+STUB_OP(F9)
+STUB_OP(FA)
+STUB_OP(FB)
+STUB_OP(FC)
+STUB_OP(FD)
+STUB_OP(FE)
+STUB_OP(FF)
+
+#undef STUB_OP
