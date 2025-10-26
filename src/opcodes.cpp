@@ -2,9 +2,10 @@
 #include "../inc/x64.hpp"
 
 #include "debug.cpp"
+#include <vector>
 
 void CPU::OP_00() {
-    ModRM *modrm = this->getModRM(RegType::R8, this->read(), this->read());
+    ModRM *modrm = this->getModRM(RegType::R8);
     u32 disp;
     u64 ptr = this->getModRMPtr(modrm, disp);
     Reg *dst = new Reg(ptr);
@@ -23,13 +24,13 @@ void CPU::OP_00() {
 }
 
 void CPU::OP_01() {
-    ModRM *modrm = this->getModRM(RegType::R32, this->read(), this->read());
+    ModRM *modrm = this->getModRM(RegType::R32);
     u32 disp;
     u64 ptr = this->getModRMPtr(modrm, disp);
     Reg *dst = new Reg(ptr);
     Reg *src = this->toReg(modrm->reg);
 
-    if (this->checkExceptions(ptr, { ExceptionType::SS, GP, PF, AC, UD })) {
+    if (this->checkExceptions(ptr, (const std::vector<ExceptionType>){ ExceptionType::SS, GP, PF, AC, UD })) {
         return;
     }
 
@@ -42,7 +43,7 @@ void CPU::OP_01() {
 }
 
 void CPU::OP_02() {
-    ModRM *modrm = this->getModRM(RegType::R8, this->read(), this->read());
+    ModRM *modrm = this->getModRM(RegType::R8);
     u32 disp;
     Reg *dst = this->toReg(modrm->reg);
     Reg *src = new Reg(this->getModRMPtr(modrm, disp));
@@ -55,7 +56,7 @@ void CPU::OP_02() {
 }
 
 void CPU::OP_03() {
-    ModRM *modrm = this->getModRM(RegType::R32, this->read(), this->read());
+    ModRM *modrm = this->getModRM(RegType::R32);
     u32 disp;
     Reg *dst = this->toReg(modrm->reg);
     Reg *src = new Reg(this->getModRMPtr(modrm, disp));

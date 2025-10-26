@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/accui64.exe",
-            "args": ["-std=C++20"],
+            "args": ["rom.bin"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

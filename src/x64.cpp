@@ -25,6 +25,7 @@ void CPU::run() {
         std::cout << std::endl;
 
         if (i > 5) break;
+        if (IP->r > 0x100) break;
     }
 }
 
@@ -183,7 +184,7 @@ void CPU::determineModRMSib(ModRM *modrm, RegType type, u8 sib) {
         case RegType::R8: case RegType::R8H:
             modrm->reg_type = RegType::R8;
 
-            if (modrm->_reg >= 4 && modrm->_reg < 8 && !this->extra_info.contains("rex")) {
+            if (modrm->_reg >= 4 && modrm->_reg < 8 && this->extra_info["rex"] == 0x00) {
                 modrm->_reg -= 4; modrm->reg_type = RegType::R8H;
             }
             modrm->reg = &this->regs[modrm->_reg];
@@ -218,7 +219,8 @@ void CPU::determineModRMSib(ModRM *modrm, RegType type, u8 sib) {
     }
 }
 
-ModRM *CPU::getModRM(RegType type, u8 val, u8 sib) {
+ModRM *CPU::getModRM(RegType type) {
+    u8 val = this->read();
     ModRM *modrm = new ModRM(
         getMask(val, 7, 6),
         getMask(val, 5, 3),
@@ -237,7 +239,7 @@ ModRM *CPU::getModRM(RegType type, u8 val, u8 sib) {
     }
 
     if (modrm->_rm == 4) {
-        this->determineModRMSib(modrm, type, sib);
+        this->determineModRMSib(modrm, type, this->read());
         return modrm;
     }
 

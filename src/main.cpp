@@ -1,12 +1,20 @@
 #include "alu.cpp"
 #include "x64.cpp"
 #include "opcodes.cpp"
+#include "ram.cpp"
 
-u8 RAM::data[0x10000000] = {
-    5, 77, 32, 0,
-};
+int main(int argc, char *argv[]) {
 
-int main() {
+    if (argc < 2) {
+        std::cout << "USAGE: accui64.exe [FILENAME]" << std::endl;
+        return 1;
+    }
+
+    RAM::load(argv[1]);
+    if (RAM::data == nullptr) return 1;
+
     CPU *cpu = new CPU();
     cpu->run();
+
+    return 0;
 }

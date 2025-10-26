@@ -4,6 +4,7 @@
 #include "reg.hpp"
 #include <array>
 #include <unordered_map>
+#include <vector>
 
 // reg = [idx * mul + base + disp]
 struct SIB {
@@ -76,7 +77,7 @@ public:
 
     void HALT();
 
-    ModRM *getModRM(RegType type, u8 val, u8 sib);
+    ModRM *getModRM(RegType type);
     u64 getModRMPtr(ModRM *modrm, u32 &disp);
 
     u8 read();

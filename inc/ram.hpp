@@ -2,15 +2,12 @@
 
 #include "types.hpp"
 
-class RAM {
-public:
-    static u8 data[0x10000000];
+namespace RAM {
 
-    static u8 read(u64 addr) {
-        return RAM::data[addr & 0xFFFFFFF];
-    }
+extern u8 *data;
 
-    static void write(u64 addr, u8 val) {
-        RAM::data[addr & 0xFFFFFFF] = val;
-    }
+void load(const char *filename);
+u8 read(u64 addr);
+void write(u64 addr, u8 val);
+
 };
