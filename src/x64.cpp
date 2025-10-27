@@ -9,7 +9,53 @@ CPU::CPU() {
 
     this->running = true;
 
-    this->IP->x = 0;
+    this->setupRegs();
+}
+
+void CPU::setupRegs() {
+    for (int i = 0; i < 0x10; i++) {
+        this->regs[i] = 0;
+    }
+    this->IP->r = 0xFFF0;
+
+    for (int i = 0; i < 6; i++) {
+        this->st_regs[i] = 0;
+    }
+    *this->CS = 0xF000;
+
+    RFLAGS._0 = 1;
+
+    *CR0 = { 0 };
+    CR0->et = 1;
+    CR0->mp = 1;
+    CR0->ne = 1;
+
+    *CR2 = 0;
+    *CR3 = { 0 };
+    *CR4 = { 0 };
+
+    *DR0 = 0;
+    *DR1 = 0;
+    *DR2 = 0;
+    *DR3 = 0;
+    *DR6 = 0xFFFF0FF0;
+    
+    *DR7 = { 0 };
+    DR7->dr0_size = 1;
+
+    LDTR = 0;
+    TR = 0;
+    GDTR.addr = 0;
+    IDTR.addr = 0;
+
+    for (int i = 0; i < 8; i++) {
+        this->mm_regs[i] = 0;
+    }
+    for (int i = 0; i < 16; i++) {
+        this->xm_regs[i] = { 0 };
+    }
+
+    IA32_EFER = { 0 };
 }
 
 void CPU::run() {

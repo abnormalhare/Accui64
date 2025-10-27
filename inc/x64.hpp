@@ -65,12 +65,14 @@ public:
     u16 LDTR;
     u16 TR;
     IDTR IDTR;
+    IA32_EFER IA32_EFER;
 
     u32 FSBase  = 0xC0000100;
     u32 GSBase  = 0xC0000101;
     u32 KGSBase = 0xC0000102;
 
     CPU();
+    void setupRegs();
 
     void run();
     void runStep();
