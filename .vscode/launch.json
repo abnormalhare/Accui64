@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/accui64.exe",
-            "args": ["rom.bin"],
+            "args": ["t440p_coreboot_seabios_4931b978d9_top.rom "],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

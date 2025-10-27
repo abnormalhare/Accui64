@@ -1,4 +1,5 @@
 #include "../inc/ram.hpp"
+#include <immintrin.h>
 #include <iostream>
 #include <variant>
 #include "../inc/x64.hpp"
@@ -16,7 +17,7 @@ void CPU::setupRegs() {
     for (int i = 0; i < 0x10; i++) {
         this->regs[i] = 0;
     }
-    this->IP->r = 0xFFF0;
+    this->IP->r = 0xFFF0FFF0;
 
     for (int i = 0; i < 6; i++) {
         this->st_regs[i] = 0;
@@ -52,7 +53,8 @@ void CPU::setupRegs() {
         this->mm_regs[i] = 0;
     }
     for (int i = 0; i < 16; i++) {
-        this->xm_regs[i] = { 0 };
+        this->xm_regs[i].n256[0] = _mm256_setzero_si256();
+        this->xm_regs[i].n256[1] = _mm256_setzero_si256();
     }
 
     IA32_EFER = { 0 };
@@ -64,7 +66,7 @@ void CPU::run() {
     int i = 0;
     while (this->running) {
         std::cout << "---------------------------" << std::endl << std::endl;
-        std::cout << "EIP: " << (int)IP->e << std::endl;
+        std::cout << "EIP: " << std::hex << (int)((*CS << 4) + IP->e) << std::endl;
 
         this->runStep();
         
@@ -323,7 +325,9 @@ u64 CPU::getModRMPtr(ModRM *modrm, u32 &disp) {
 }
 
 u8 CPU::read() {
-    u8 ret = RAM::read(IP->x++);
+    u8 ret = RAM::read(IP->e + (*CS << 4));
+    IP->x++;
+
     return ret;
 }
 

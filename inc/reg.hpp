@@ -90,7 +90,6 @@ union SignedReg {
 };
 
 union XMMReg {
-    n512 n512;
     n256 n256[2];
     n128 n128[4];
     f128 f128[4];
