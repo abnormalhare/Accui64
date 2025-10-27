@@ -17,12 +17,16 @@ void CPU::setupRegs() {
     for (int i = 0; i < 0x10; i++) {
         this->regs[i] = 0;
     }
-    this->IP->r = 0xFFF0FFF0;
+    this->IP->r = 0xFFF0;
 
     for (int i = 0; i < 6; i++) {
-        this->st_regs[i] = 0;
+        this->st_regs[i].selector = 0;
+        this->st_regs[i].limit = 0xFFFF;
+        this->st_regs[i].base = 0;
+        this->st_regs[i].attr = 0;
     }
-    *this->CS = 0xF000;
+    this->CS->selector = 0xF000;
+    this->CS->base = 0xFFFF0000;
 
     RFLAGS._0 = 1;
 
@@ -66,14 +70,11 @@ void CPU::run() {
     int i = 0;
     while (this->running) {
         std::cout << "---------------------------" << std::endl << std::endl;
-        std::cout << "EIP: " << std::hex << (int)((*CS << 4) + IP->e) << std::endl;
+        std::cout << "EIP: " << std::hex << (int)(CS->base + IP->e) << std::endl;
 
         this->runStep();
         
         std::cout << std::endl;
-
-        if (i > 5) break;
-        if (IP->r > 0x100) break;
     }
 }
 
@@ -325,7 +326,7 @@ u64 CPU::getModRMPtr(ModRM *modrm, u32 &disp) {
 }
 
 u8 CPU::read() {
-    u8 ret = RAM::read(IP->e + (*CS << 4));
+    u8 ret = RAM::read(CS->base + IP->e);
     IP->x++;
 
     return ret;

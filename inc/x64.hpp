@@ -54,7 +54,7 @@ public:
     Reg regs[17];
     u64 mm_regs[8];
     XMMReg xm_regs[16];
-    u16 st_regs[6];
+    SegReg st_regs[6];
     u64 cr_regs[16];
     u32 db_regs[8];
     u32 tr_regs[8];
@@ -156,12 +156,12 @@ public:
     Reg *R15 = &regs[15];
     Reg *IP  = &regs[16];
 
-    u16 *ES = &st_regs[0];
-    u16 *CS = &st_regs[1];
-    u16 *SS = &st_regs[2];
-    u16 *DS = &st_regs[3];
-    u16 *FS = &st_regs[4];
-    u16 *GS = &st_regs[5];
+    SegReg *ES = &st_regs[0];
+    SegReg *CS = &st_regs[1];
+    SegReg *SS = &st_regs[2];
+    SegReg *DS = &st_regs[3];
+    SegReg *FS = &st_regs[4];
+    SegReg *GS = &st_regs[5];
 
     CR0 *CR0 = (struct CR0 *)&cr_regs[0];
     u64 *CR2 = &cr_regs[2];

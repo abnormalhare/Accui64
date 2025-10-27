@@ -125,6 +125,13 @@ struct Flags {
     u32 _5      = 0;
 };
 
+struct SegReg {
+    u16 selector;
+    u32 base;
+    u32 limit;
+    u16 attr;
+};
+
 struct CR0 {
     u8 pe  : 1;
     u8 mp  : 1;

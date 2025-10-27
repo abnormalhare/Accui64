@@ -108,6 +108,30 @@ void CPU::OP_05() {
     delete src;
 }
 
+void CPU::OP_E9() {
+    if (!CR0->pe) { // 16-bit signed jump: JMP YYXX / E9 XX YY
+        s16 jumpVal = (s16)this->getVal16();
+
+        IP->x = (s16)IP->x + jumpVal;
+
+        std::cout << "JMP " << std::hex << jumpVal << std::endl;
+    }
+}
+
+void CPU::OP_FA() {
+    if (!CR0->pe) { // allowed
+        RFLAGS.iF = 0;
+    } else if (RFLAGS.iopl >= (CS->selector & 0b11)) {
+        RFLAGS.iF = 0;
+    } else if (CR4->vme || CR4->pvi) {
+        RFLAGS.vif = 0;
+    } else {
+        // GP(0)
+    }
+
+    std::cout << "CLI" << std::endl;
+}
+
 #define STUB_OP(hex) \
 void CPU::OP_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x" #hex << std::endl; this->HALT(); }
 
@@ -338,7 +362,6 @@ STUB_OP(E5)
 STUB_OP(E6)
 STUB_OP(E7)
 STUB_OP(E8)
-STUB_OP(E9)
 STUB_OP(EA)
 STUB_OP(EB)
 STUB_OP(EC)
@@ -355,7 +378,6 @@ STUB_OP(F6)
 STUB_OP(F7)
 STUB_OP(F8)
 STUB_OP(F9)
-STUB_OP(FA)
 STUB_OP(FB)
 STUB_OP(FC)
 STUB_OP(FD)
