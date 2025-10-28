@@ -1,5 +1,6 @@
 #include "alu.cpp"
 #include "x64.cpp"
+#include "debug.cpp"
 #include "opcodes/std.cpp"
 #include "ram.cpp"
 

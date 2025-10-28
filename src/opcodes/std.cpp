@@ -1,7 +1,7 @@
 #include "../../inc/alu.hpp"
 #include "../../inc/x64.hpp"
+#include "../../inc/debug.hpp"
 
-#include "../debug.cpp"
 #include <vector>
 
 #include "0F.cpp"
@@ -117,7 +117,7 @@ bool CPU::OP_05() {
 }
 
 bool CPU::OP_0F() {
-    return (this->*CPU::opcode_table[this->read()])();
+    return (this->*CPU::opcode_table_0F[this->read()])();
 }
 
 bool CPU::OP_31() {

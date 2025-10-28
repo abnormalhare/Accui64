@@ -60,7 +60,7 @@ union Reg {
             case RegType::R8:  this->l = std::get<u8 >(val); break;
             case RegType::R8H: this->h = std::get<u8 >(val); break;
             case RegType::R16: this->x = std::get<u16>(val); break;
-            case RegType::R32: this->e = std::get<u32>(val); break;
+            case RegType::R32: this->r = 0; this->e = std::get<u32>(val); break;
             case RegType::R64: this->r = std::get<u64>(val); break;
             default: break;
         }

@@ -109,6 +109,10 @@ public:
         return reinterpret_cast<Reg *>(reg);
     }
     
+    bool isLongMode() {
+        return CR0->pe && CR4->pae && IA32_EFER.lma;
+    }
+    
     Reg *AX  = &regs[ 0];
     Reg *CX  = &regs[ 1];
     Reg *DX  = &regs[ 2];
@@ -213,3 +217,11 @@ public:
     bool OP_0F_F0(); bool OP_0F_F1(); bool OP_0F_F2(); bool OP_0F_F3(); bool OP_0F_F4(); bool OP_0F_F5(); bool OP_0F_F6(); bool OP_0F_F7();
     bool OP_0F_F8(); bool OP_0F_F9(); bool OP_0F_FA(); bool OP_0F_FB(); bool OP_0F_FC(); bool OP_0F_FD(); bool OP_0F_FE(); bool OP_0F_FF();
 };
+
+inline u8 getMask(u8 val, u8 start, u8 end) {
+    u8 mask = ((2 << start) - 1);
+    if (end != 0) {
+        mask -= ((2 << (end - 1)) - 1);
+    }
+    return (val & mask) >> end;
+}

@@ -1,4 +1,5 @@
 #include "../inc/x64.hpp"
+#include "../inc/debug.hpp"
 #include <iostream>
 
 static const char *r8_names[0x10] = {
@@ -42,7 +43,7 @@ static const char *xmm_names[0x8] = {
     "XMM4", "XMM5", "XMM6", "XMM7",
 };
 
-static const char *getRegName(u8 idx, RegType type) {
+const char *getRegName(u8 idx, RegType type) {
     switch (type) {
         default: return "";
 
@@ -57,7 +58,7 @@ static const char *getRegName(u8 idx, RegType type) {
     }
 }
 
-static const char *getRegPtrName(RegType type) {
+const char *getRegPtrName(RegType type) {
     switch (type) {
         default: return "";
 
@@ -72,7 +73,7 @@ static const char *getRegPtrName(RegType type) {
     }
 }
 
-static void debugPrintMem(ModRM *modrm, u32 disp) {
+void debugPrintMem(ModRM *modrm, u32 disp) {
     std::cout << getRegPtrName(modrm->reg_type) << " [";
     
     if (!modrm->shouldUseSib()) {
@@ -102,12 +103,6 @@ static void debugPrintMem(ModRM *modrm, u32 disp) {
 void debugPrintReg(ModRM *modrm, u32 disp) {
     std::cout << getRegName(modrm->_reg, modrm->reg_type);
 }
-
-enum OpOrder {
-    RM_R,
-    R_RM,
-    R_VAL,
-};
 
 void debugPrint(const char *name, ModRM *modrm, u32 disp, OpOrder order) {
     std::cout << name << " ";

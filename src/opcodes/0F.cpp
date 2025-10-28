@@ -1,17 +1,36 @@
 // #include "../../inc/alu.hpp"
 #include "../../inc/x64.hpp"
+#include "../../inc/debug.hpp"
 #include <iostream>
 
+bool CPU::OP_0F_22() {
+    u8 modrm_val = this->read();
+    ModRM *modrm = new ModRM(
+        getMask(modrm_val, 7, 6),
+        getMask(modrm_val, 5, 3),
+        getMask(modrm_val, 2, 0)
+    );
+    Reg *dst = &this->regs[modrm->_rm];
+    u64 *cr = &this->cr_regs[modrm->_reg];
 
+    RegType type = (this->isLongMode()) ? RegType::R64 : RegType::R32;
+    
+    *cr &= ~0xFFFFFFFF;
+    *cr |= dst->e;
+
+    std::cout << "MOV CR" << (int)modrm->_reg << ", " << getRegName(modrm->_rm, type) << std::endl;
+
+    return false;
+}
 
 #define STUB_OP_0F(hex) \
-bool CPU::OP_0F_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0xFF 0x" #hex << std::endl; return this->HALT(); }
+bool CPU::OP_0F_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x0F 0x" #hex << std::endl; return this->HALT(); }
 
 STUB_OP_0F(00)STUB_OP_0F(01)STUB_OP_0F(02)STUB_OP_0F(03)STUB_OP_0F(04)STUB_OP_0F(05)STUB_OP_0F(06)STUB_OP_0F(07)
 STUB_OP_0F(08)STUB_OP_0F(09)STUB_OP_0F(0A)STUB_OP_0F(0B)STUB_OP_0F(0C)STUB_OP_0F(0D)STUB_OP_0F(0E)STUB_OP_0F(0F)
 STUB_OP_0F(10)STUB_OP_0F(11)STUB_OP_0F(12)STUB_OP_0F(13)STUB_OP_0F(14)STUB_OP_0F(15)STUB_OP_0F(16)STUB_OP_0F(17)
 STUB_OP_0F(18)STUB_OP_0F(19)STUB_OP_0F(1A)STUB_OP_0F(1B)STUB_OP_0F(1C)STUB_OP_0F(1D)STUB_OP_0F(1E)STUB_OP_0F(1F)
-STUB_OP_0F(20)STUB_OP_0F(21)STUB_OP_0F(22)STUB_OP_0F(23)STUB_OP_0F(24)STUB_OP_0F(25)STUB_OP_0F(26)STUB_OP_0F(27)
+STUB_OP_0F(20)STUB_OP_0F(21)STUB_OP_0F(23)STUB_OP_0F(24)STUB_OP_0F(25)STUB_OP_0F(26)STUB_OP_0F(27)
 STUB_OP_0F(28)STUB_OP_0F(29)STUB_OP_0F(2A)STUB_OP_0F(2B)STUB_OP_0F(2C)STUB_OP_0F(2D)STUB_OP_0F(2E)STUB_OP_0F(2F)
 STUB_OP_0F(30)STUB_OP_0F(31)STUB_OP_0F(32)STUB_OP_0F(33)STUB_OP_0F(34)STUB_OP_0F(35)STUB_OP_0F(36)STUB_OP_0F(37)
 STUB_OP_0F(38)STUB_OP_0F(39)STUB_OP_0F(3A)STUB_OP_0F(3B)STUB_OP_0F(3C)STUB_OP_0F(3D)STUB_OP_0F(3E)STUB_OP_0F(3F)
@@ -39,3 +58,5 @@ STUB_OP_0F(E0)STUB_OP_0F(E1)STUB_OP_0F(E2)STUB_OP_0F(E3)STUB_OP_0F(E4)STUB_OP_0F
 STUB_OP_0F(E8)STUB_OP_0F(E9)STUB_OP_0F(EA)STUB_OP_0F(EB)STUB_OP_0F(EC)STUB_OP_0F(ED)STUB_OP_0F(EE)STUB_OP_0F(EF)
 STUB_OP_0F(F0)STUB_OP_0F(F1)STUB_OP_0F(F2)STUB_OP_0F(F3)STUB_OP_0F(F4)STUB_OP_0F(F5)STUB_OP_0F(F6)STUB_OP_0F(F7)
 STUB_OP_0F(F8)STUB_OP_0F(F9)STUB_OP_0F(FA)STUB_OP_0F(FB)STUB_OP_0F(FC)STUB_OP_0F(FD)STUB_OP_0F(FE)STUB_OP_0F(FF)
+
+#undef STUB_OP_0F

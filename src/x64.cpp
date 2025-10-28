@@ -89,14 +89,6 @@ void CPU::runStep() {
     }
 }
 
-inline u8 getMask(u8 val, u8 start, u8 end) {
-    u8 mask = ((2 << start) - 1);
-    if (end != 0) {
-        mask -= ((2 << (end - 1)) - 1);
-    }
-    return (val & mask) >> end;
-}
-
 void CPU::determineModRMMod3(ModRM *modrm, RegType type) {
     u8 rmidx  = ((this->extra_info["rex"] & REXBit::B) << 3) | modrm->_rm ;
     u8 regidx = ((this->extra_info["rex"] & REXBit::R) << 3) | modrm->_reg;
