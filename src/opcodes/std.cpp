@@ -2,6 +2,8 @@
 #include "../../inc/x64.hpp"
 #include "../../inc/debug.hpp"
 
+#include "../../inc/subop.hpp"
+
 #include <vector>
 
 #include "0F.cpp"
@@ -20,7 +22,7 @@ bool CPU::OP_00() {
     add(this, modrm->reg_type, dst, src, dst);
     this->writeReg(ptr, dst, modrm->reg_type);
 
-    debugPrint("ADD", modrm, disp, RM_R);
+    debugPrint("ADD", modrm, disp, 0, RM_R);
 
     delete dst;
     return false;
@@ -40,7 +42,7 @@ bool CPU::OP_01() {
     add(this, modrm->reg_type, dst, src, dst);
     this->writeReg(ptr, dst, modrm->reg_type);
 
-    debugPrint("ADD", modrm, disp, RM_R);
+    debugPrint("ADD", modrm, disp, 0, RM_R);
 
     delete dst;
     return false;
@@ -54,7 +56,7 @@ bool CPU::OP_02() {
 
     add(this, modrm->reg_type, dst, src, dst);
 
-    debugPrint("ADD", modrm, disp, R_RM);
+    debugPrint("ADD", modrm, disp, 0, R_RM);
 
     delete src;
     return false;
@@ -68,7 +70,7 @@ bool CPU::OP_03() {
 
     add(this, modrm->reg_type, dst, src, dst);
 
-    debugPrint("ADD", modrm, disp, R_RM);
+    debugPrint("ADD", modrm, disp,0,  R_RM);
 
     delete src;
     return false;
@@ -131,7 +133,7 @@ bool CPU::OP_31() {
         xorF(this, modrm->reg_type, dst, src, dst);
         this->writeReg(ptr, dst, modrm->reg_type);
 
-        debugPrint("XOR", modrm, disp, RM_R);
+        debugPrint("XOR", modrm, disp, 0, RM_R);
 
         delete dst;
     }
@@ -155,7 +157,7 @@ bool CPU::OP_89() {
 
         dst->set(modrm->reg_type, src->get(modrm->reg_type));
 
-        debugPrint("MOV", modrm, disp, RM_R);
+        debugPrint("MOV", modrm, disp, 0, RM_R);
         if (modrm->_mod != 3) {
             this->writeReg(ptr, dst, modrm->reg_type);
             delete dst;
@@ -185,13 +187,18 @@ bool CPU::OP_8C() {
         
 
         modrm->reg_type = RegType::ST;
-        debugPrint("MOV", modrm, disp, RM_R);
+        debugPrint("MOV", modrm, disp, 0, RM_R);
         if (modrm->_mod != 3) {
             this->writeReg(ptr, dst, modrm->reg_type);
             delete dst;
         }
     }
     return false;
+}
+
+bool CPU::OP_C1() {
+    ModRM *modrm = this->getModRM(RegType::R16);
+    return subop_c1_table[modrm->_reg](this, modrm);
 }
 
 bool CPU::OP_E9() {
@@ -244,7 +251,7 @@ STUB_OP(9A)STUB_OP(9B)STUB_OP(9C)STUB_OP(9D)STUB_OP(9E)STUB_OP(9F)STUB_OP(A0)STU
 STUB_OP(A3)STUB_OP(A4)STUB_OP(A5)STUB_OP(A6)STUB_OP(A7)STUB_OP(A8)STUB_OP(A9)STUB_OP(AA)STUB_OP(AB)
 STUB_OP(AC)STUB_OP(AD)STUB_OP(AE)STUB_OP(AF)STUB_OP(B0)STUB_OP(B1)STUB_OP(B2)STUB_OP(B3)STUB_OP(B4)
 STUB_OP(B5)STUB_OP(B6)STUB_OP(B7)STUB_OP(B8)STUB_OP(B9)STUB_OP(BA)STUB_OP(BB)STUB_OP(BC)STUB_OP(BD)
-STUB_OP(BE)STUB_OP(BF)STUB_OP(C0)STUB_OP(C1)STUB_OP(C2)STUB_OP(C3)STUB_OP(C4)STUB_OP(C5)STUB_OP(C6)
+STUB_OP(BE)STUB_OP(BF)STUB_OP(C0)STUB_OP(C2)STUB_OP(C3)STUB_OP(C4)STUB_OP(C5)STUB_OP(C6)
 STUB_OP(C7)STUB_OP(C8)STUB_OP(C9)STUB_OP(CA)STUB_OP(CB)STUB_OP(CC)STUB_OP(CD)STUB_OP(CE)STUB_OP(CF)
 STUB_OP(D0)STUB_OP(D1)STUB_OP(D2)STUB_OP(D3)STUB_OP(D4)STUB_OP(D5)STUB_OP(D6)STUB_OP(D7)STUB_OP(D8)
 STUB_OP(D9)STUB_OP(DA)STUB_OP(DB)STUB_OP(DC)STUB_OP(DD)STUB_OP(DE)STUB_OP(DF)STUB_OP(E0)STUB_OP(E1)

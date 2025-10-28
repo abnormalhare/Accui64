@@ -2,6 +2,7 @@
 #include "x64.cpp"
 #include "debug.cpp"
 #include "opcodes/std.cpp"
+#include "opcodes/sub.cpp"
 #include "ram.cpp"
 
 int main(int argc, char *argv[]) {

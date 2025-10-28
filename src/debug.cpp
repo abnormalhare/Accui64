@@ -108,7 +108,7 @@ void debugPrintReg(ModRM *modrm, u32 disp) {
     std::cout << getRegName(modrm->_reg, modrm->reg_type);
 }
 
-void debugPrint(const char *name, ModRM *modrm, u32 disp, OpOrder order) {
+void debugPrint(const char *name, ModRM *modrm, u32 disp, u64 val, OpOrder order) {
     std::cout << name << " ";
 
     switch (order) {
@@ -124,7 +124,15 @@ void debugPrint(const char *name, ModRM *modrm, u32 disp, OpOrder order) {
             debugPrintMem(modrm, disp);
             break;
         
-        case R_VAL: break;
+        case RM_VAL:
+            debugPrintMem(modrm, disp);
+            std::cout << ", " << val;
+            break;
+        
+        case R_VAL:
+            debugPrintReg(modrm, disp);
+            std::cout << ", " << val;
+            break;
     }
 
     std::cout << std::endl;
