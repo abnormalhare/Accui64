@@ -17,6 +17,14 @@ void calcOp(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result, Fun
     }, va, vb);
 }
 
+template<typename T>
+static u8 get_parity(T res) {
+    res ^= res >> 4;
+    res ^= res >> 2;
+    res ^= res >> 1;
+    return !(res & 1);
+}
+
 void add(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result) {
     calcOp(cpu, type, a, b, result, [](CPU *cpu, auto a, auto b) {
         using T = decltype(a);
@@ -25,16 +33,33 @@ void add(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result) {
         constexpr int bits = sizeof(T) * 8;
 
         u64 topbit = (1ULL << (bits - 1));
-        u8 parity = (res ^ (res >> 4));
-        parity ^= parity >> 2;
-        parity ^= parity >> 1;
 
         cpu->RFLAGS.cf = (res < a);
-        cpu->RFLAGS.pf = !(parity & 1);
+        cpu->RFLAGS.pf = get_parity<T>(res);
         cpu->RFLAGS.af = ((a ^ b ^ res) & 0x10) != 0;
         cpu->RFLAGS.zf = (res == 0);
         cpu->RFLAGS.sf = (res >> (bits - 1)) & 1;
         cpu->RFLAGS.of = (((a ^ b) & topbit) == 0) && (((a ^ res) & topbit) != 0);
+
+        return res;
+    });
+}
+
+void xorF(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result) {
+    calcOp(cpu, type, a, b, result, [](CPU *cpu, auto a, auto b) {
+        using T = decltype(a);
+        
+        T res = a ^ b;
+        constexpr int bits = sizeof(T) * 8;
+
+        u64 topbit = (1ULL << (bits - 1));
+
+        cpu->RFLAGS.cf = 0;
+        cpu->RFLAGS.of = 0;
+        cpu->RFLAGS.pf = get_parity<T>(res);
+        cpu->RFLAGS.zf = (res == 0);
+        cpu->RFLAGS.sf = (res >> (bits - 1)) & 1;
+        cpu->RFLAGS.af = 0;
 
         return res;
     });

@@ -81,10 +81,12 @@ void CPU::run() {
 void CPU::runStep() {
     this->curr_inst = this->read();
 
-    (this->*CPU::opcode_table[this->curr_inst])();
+    bool dont_clear = (this->*CPU::opcode_table[this->curr_inst])();
 
-    this->extra_info.clear();
-    this->extra_info.insert({"rex", 0x00});
+    if (!dont_clear) {
+        this->extra_info.clear();
+        this->extra_info.insert({"rex", 0x00});
+    }
 }
 
 inline u8 getMask(u8 val, u8 start, u8 end) {
@@ -96,18 +98,18 @@ inline u8 getMask(u8 val, u8 start, u8 end) {
 }
 
 void CPU::determineModRMMod3(ModRM *modrm, RegType type) {
+    u8 rmidx  = ((this->extra_info["rex"] & REXBit::B) << 3) | modrm->_rm ;
+    u8 regidx = ((this->extra_info["rex"] & REXBit::R) << 3) | modrm->_reg;
+    
     switch (type) {
         case RegType::R8: case RegType::R8H:
             modrm->reg_type = modrm->rm_type  = RegType::R8;
 
-            if (modrm->_rm >= 4 && modrm->_rm < 8) {
-                modrm->_rm -= 4;  modrm->rm_type  = RegType::R8H;
-            }
-            if (modrm->_reg >= 4 && modrm->_reg < 8 && !this->extra_info.contains("rex")) {
+            if (modrm->_reg >= 4 && modrm->_reg < 8) {
                 modrm->_reg -= 4; modrm->reg_type = RegType::R8H;
             }
-            modrm->rm  = &this->regs[modrm->_rm ];
-            modrm->reg = &this->regs[modrm->_reg];
+            modrm->rm  = &this->regs[rmidx ];
+            modrm->reg = &this->regs[regidx];
             break;
         
         case RegType::R16: case RegType::R32: case RegType::R64:
@@ -119,29 +121,29 @@ void CPU::determineModRMMod3(ModRM *modrm, RegType type) {
             if (this->extra_info["rex"] & REXBit::W) {
                 modrm->reg_type = modrm->rm_type  = RegType::R64;
             }
-            modrm->rm  = &this->regs[modrm->_rm ];
-            modrm->reg = &this->regs[modrm->_reg];
+            modrm->rm  = &this->regs[rmidx ];
+            modrm->reg = &this->regs[regidx];
             break;
         
         case RegType::ST:
             modrm->reg_type = modrm->rm_type  = RegType::ST;
 
-            modrm->rm  = &this->st_regs[modrm->_rm  & 7];
-            modrm->reg = &this->st_regs[modrm->_reg & 7];
+            modrm->rm  = &this->st_regs[modrm->_rm ];
+            modrm->reg = &this->st_regs[modrm->_reg];
             break;
         
         case RegType::MM:
             modrm->reg_type = modrm->rm_type  = RegType::MM;
             
-            modrm->rm  = &this->mm_regs[modrm->_rm  & 7];
-            modrm->reg = &this->mm_regs[modrm->_reg & 7];
+            modrm->rm  = &this->mm_regs[modrm->_rm ];
+            modrm->reg = &this->mm_regs[modrm->_reg];
             break;
         
         case RegType::XMM:
             modrm->reg_type = modrm->rm_type  = RegType::XMM;
             
-            modrm->rm  = &this->xm_regs[modrm->_rm ];
-            modrm->reg = &this->xm_regs[modrm->_reg];
+            modrm->rm  = &this->xm_regs[rmidx ];
+            modrm->reg = &this->xm_regs[regidx];
             break;
     }
 }
@@ -211,6 +213,7 @@ void CPU::determineModRMSib(ModRM *modrm, RegType type, u8 sib) {
     
     u8 idxidx  = ((this->extra_info["rex"] & REXBit::X) << 3) | modrm->sib._idx;
     u8 baseidx = ((this->extra_info["rex"] & REXBit::B) << 3) | modrm->sib._base;
+    u8 regidx = ((this->extra_info["rex"] & REXBit::R)  << 3) | modrm->_reg;
 
     modrm->sib.idx  = (idxidx == 4) ? nullptr : &this->regs[idxidx];
     modrm->sib.base = &this->regs[baseidx];
@@ -236,7 +239,7 @@ void CPU::determineModRMSib(ModRM *modrm, RegType type, u8 sib) {
             if (modrm->_reg >= 4 && modrm->_reg < 8 && this->extra_info["rex"] == 0x00) {
                 modrm->_reg -= 4; modrm->reg_type = RegType::R8H;
             }
-            modrm->reg = &this->regs[modrm->_reg];
+            modrm->reg = &this->regs[regidx];
             break;
         
         case RegType::R16: case RegType::R32: case RegType::R64:
@@ -248,27 +251,99 @@ void CPU::determineModRMSib(ModRM *modrm, RegType type, u8 sib) {
             if (this->extra_info["rex"] & REXBit::W) {
                 modrm->reg_type = RegType::R64;
             }
-            modrm->reg = &this->regs[modrm->_reg];
+            modrm->reg = &this->regs[regidx];
             break;
         
         case RegType::ST:
             modrm->reg_type = RegType::ST;
-            modrm->reg = &this->st_regs[modrm->_reg & 7];
+            modrm->reg = &this->st_regs[modrm->_reg];
             break;
         
         case RegType::MM:
             modrm->reg_type = RegType::MM;
-            modrm->reg = &this->mm_regs[modrm->_reg & 7];
+            modrm->reg = &this->mm_regs[modrm->_reg];
             break;
         
         case RegType::XMM:
             modrm->reg_type = RegType::XMM;
-            modrm->reg = &this->xm_regs[modrm->_reg];
+            modrm->reg = &this->xm_regs[regidx];
             break;
     }
 }
 
-ModRM *CPU::getModRM(RegType type) {
+ModRM *CPU::getModRM16(RegType type) {
+    u8 val = this->read();
+    ModRM *modrm = new ModRM(
+        getMask(val, 7, 6),
+        getMask(val, 5, 3),
+        getMask(val, 2, 0)
+    );
+
+    modrm->rm = nullptr;
+    modrm->disp = modrm->_mod % 3;
+
+    bool mod3 = false;
+    if (modrm->_mod == 3) {
+        mod3 = true;
+        modrm->rm = &this->regs[modrm->_rm];
+
+        goto detType;
+    }
+
+    switch (modrm->_rm) {
+        case 0: modrm->sib.idx = BX; modrm->sib.base = SI; break;
+        case 1: modrm->sib.idx = BX; modrm->sib.base = DI; break;
+        case 2: modrm->sib.idx = BP; modrm->sib.base = SI; break;
+        case 3: modrm->sib.idx = BP; modrm->sib.base = DI; break;
+        case 4: modrm->rm = SI; break;
+        case 5: modrm->rm = DI; break;
+        case 6: modrm->rm = BP; break;
+        case 7: modrm->rm = BX; break;
+    }
+    if (modrm->_mod == 0 && modrm->_rm == 6) {
+        modrm->rm = nullptr;
+        modrm->disp = 2;
+    }
+    
+    modrm->rm_type  = RegType::R16;
+    modrm->sib.idx_type  = RegType::R16;
+    modrm->sib.base_type = RegType::R16;
+    if (this->extra_info.contains("ad")) {
+        modrm->rm_type  = RegType::R32;
+        modrm->sib.idx_type  = RegType::R32;
+        modrm->sib.base_type = RegType::R32;
+    }
+
+detType:
+    switch (type) {
+        default: break;
+
+        case RegType::R8: case RegType::R8H:
+            modrm->reg_type = RegType::R8;
+
+            if (modrm->_reg >= 4 && modrm->_reg < 8) {
+                modrm->_reg -= 4; modrm->reg_type = RegType::R8H;
+            }
+            modrm->reg = &this->regs[modrm->_reg];
+            break;
+
+        case RegType::R16: case RegType::R32:
+            modrm->reg_type = RegType::R16;
+
+            if (this->extra_info.contains("op")) {
+                modrm->reg_type = RegType::R32;
+            }
+            modrm->reg = &this->regs[modrm->_reg];
+    }
+
+    if (mod3) {
+        modrm->rm_type = modrm->reg_type;
+    }
+
+    return modrm;
+}
+
+ModRM *CPU::getModRM32(RegType type) {
     u8 val = this->read();
     ModRM *modrm = new ModRM(
         getMask(val, 7, 6),
@@ -301,6 +376,14 @@ ModRM *CPU::getModRM(RegType type) {
     return modrm;
 }
 
+ModRM *CPU::getModRM(RegType type) {
+    if (!CR0->pe) {
+        return this->getModRM16(type);
+    } else {
+        return this->getModRM32(type);
+    }
+}
+
 u64 CPU::getModRMPtr(ModRM *modrm, u32 &disp) {
     u64 val = 0;
 
@@ -319,6 +402,7 @@ u64 CPU::getModRMPtr(ModRM *modrm, u32 &disp) {
     switch (modrm->disp) {
         case 0: break;
         case 1: val += disp = this->getVal8();  break;
+        case 2: val += disp = this->getVal16(); break;
         case 4: val += disp = this->getVal32(); break;
     }
 
@@ -347,12 +431,13 @@ void CPU::writeReg(u64 addr, Reg *reg, RegType type) {
     }, val);
 }
 
-void CPU::HALT() {
+bool CPU::HALT() {
     this->running = false;
+    return false;
 }
 
-static constexpr std::array<void (CPU::*)(), 0x100> make_opcode_table() {
-    std::array<void (CPU::*)(), 0x100> t{};
+static constexpr std::array<bool (CPU::*)(), 0x100> make_opcode_table() {
+    std::array<bool (CPU::*)(), 0x100> t{};
 
     t[0x00] = &CPU::OP_00; t[0x01] = &CPU::OP_01; t[0x02] = &CPU::OP_02; t[0x03] = &CPU::OP_03;
     t[0x04] = &CPU::OP_04; t[0x05] = &CPU::OP_05; t[0x06] = &CPU::OP_06; t[0x07] = &CPU::OP_07;
@@ -421,7 +506,7 @@ static constexpr std::array<void (CPU::*)(), 0x100> make_opcode_table() {
     return t;
 }
 
-const std::array<void (CPU::*)(), 0x100> CPU::opcode_table = make_opcode_table();
+const std::array<bool (CPU::*)(), 0x100> CPU::opcode_table = make_opcode_table();
 
 u8 CPU::getVal8() {
     return this->read();

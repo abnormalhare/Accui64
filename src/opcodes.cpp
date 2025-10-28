@@ -4,7 +4,7 @@
 #include "debug.cpp"
 #include <vector>
 
-void CPU::OP_00() {
+bool CPU::OP_00() {
     ModRM *modrm = this->getModRM(RegType::R8);
     u32 disp;
     u64 ptr = this->getModRMPtr(modrm, disp);
@@ -12,7 +12,7 @@ void CPU::OP_00() {
     Reg *src = this->toReg(modrm->reg);
 
     if (this->checkExceptions(ptr, { ExceptionType::SS, GP, PF, AC, UD })) {
-        return;
+        return false;
     }
 
     add(this, modrm->reg_type, dst, src, dst);
@@ -21,9 +21,10 @@ void CPU::OP_00() {
     debugPrint("ADD", modrm, disp, RM_R);
 
     delete dst;
+    return false;
 }
 
-void CPU::OP_01() {
+bool CPU::OP_01() {
     ModRM *modrm = this->getModRM(RegType::R32);
     u32 disp;
     u64 ptr = this->getModRMPtr(modrm, disp);
@@ -31,7 +32,7 @@ void CPU::OP_01() {
     Reg *src = this->toReg(modrm->reg);
 
     if (this->checkExceptions(ptr, (const std::vector<ExceptionType>){ ExceptionType::SS, GP, PF, AC, UD })) {
-        return;
+        return false;
     }
 
     add(this, modrm->reg_type, dst, src, dst);
@@ -40,9 +41,10 @@ void CPU::OP_01() {
     debugPrint("ADD", modrm, disp, RM_R);
 
     delete dst;
+    return false;
 }
 
-void CPU::OP_02() {
+bool CPU::OP_02() {
     ModRM *modrm = this->getModRM(RegType::R8);
     u32 disp;
     Reg *dst = this->toReg(modrm->reg);
@@ -53,9 +55,10 @@ void CPU::OP_02() {
     debugPrint("ADD", modrm, disp, R_RM);
 
     delete src;
+    return false;
 }
 
-void CPU::OP_03() {
+bool CPU::OP_03() {
     ModRM *modrm = this->getModRM(RegType::R32);
     u32 disp;
     Reg *dst = this->toReg(modrm->reg);
@@ -66,9 +69,10 @@ void CPU::OP_03() {
     debugPrint("ADD", modrm, disp, R_RM);
 
     delete src;
+    return false;
 }
 
-void CPU::OP_04() {
+bool CPU::OP_04() {
     Reg *dst = AX;
     Reg *src = new Reg();
     src->l = this->getVal8();
@@ -80,9 +84,10 @@ void CPU::OP_04() {
     std::cout << "ADD AX, " << (int)src->l << std::endl;
 
     delete src;
+    return false;
 }
 
-void CPU::OP_05() {
+bool CPU::OP_05() {
     Reg *dst = AX;
     Reg *src = new Reg();
     RegType src_type;
@@ -106,9 +111,53 @@ void CPU::OP_05() {
     std::cout << "ADD " << getRegName(0, src_type) << ", " << std::hex << val << std::endl;
 
     delete src;
+    return false;
 }
 
-void CPU::OP_E9() {
+bool CPU::OP_31() {
+    if (!CR0->pe) {
+        ModRM *modrm = this->getModRM(RegType::R16);
+        u32 disp;
+        u64 ptr = this->getModRMPtr(modrm, disp);
+        Reg *dst = new Reg(ptr);
+        Reg *src = this->toReg(modrm->reg);
+
+        xorF(this, modrm->reg_type, dst, src, dst);
+        this->writeReg(ptr, dst, modrm->reg_type);
+
+        debugPrint("XOR", modrm, disp, RM_R);
+
+        delete dst;
+    }
+
+    return false;
+}
+
+bool CPU::OP_66() {
+    this->extra_info.insert({"op", 1});
+
+    std::cout << "OPERAND PREFIX" << std::endl;
+    return true;
+}
+
+bool CPU::OP_89() {
+    if (!CR0->pe) {
+        ModRM *modrm = this->getModRM(RegType::R16);
+        u32 disp;
+        u64 ptr = this->getModRMPtr(modrm, disp);
+        Reg *dst = new Reg(ptr);
+        Reg *src = this->toReg(modrm->reg);
+
+        dst->set(modrm->reg_type, src->get(modrm->reg_type));
+
+        debugPrint("MOV", modrm, disp, RM_R);
+
+        delete dst;
+    }
+    return false;
+}
+
+bool CPU::OP_E9() {
     if (!CR0->pe) { // 16-bit signed jump: JMP YYXX / E9 XX YY
         s16 jumpVal = (s16)this->getVal16();
 
@@ -116,9 +165,10 @@ void CPU::OP_E9() {
 
         std::cout << "JMP " << std::hex << jumpVal << std::endl;
     }
+    return false;
 }
 
-void CPU::OP_FA() {
+bool CPU::OP_FA() {
     if (!CR0->pe) { // allowed
         RFLAGS.iF = 0;
     } else if (RFLAGS.iopl >= (CS->selector & 0b11)) {
@@ -130,10 +180,12 @@ void CPU::OP_FA() {
     }
 
     std::cout << "CLI" << std::endl;
+
+    return false;
 }
 
 #define STUB_OP(hex) \
-void CPU::OP_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x" #hex << std::endl; this->HALT(); }
+bool CPU::OP_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x" #hex << std::endl; return this->HALT(); }
 
 STUB_OP(06)
 STUB_OP(07)
@@ -178,7 +230,6 @@ STUB_OP(2D)
 STUB_OP(2E)
 STUB_OP(2F)
 STUB_OP(30)
-STUB_OP(31)
 STUB_OP(32)
 STUB_OP(33)
 STUB_OP(34)
@@ -231,7 +282,6 @@ STUB_OP(62)
 STUB_OP(63)
 STUB_OP(64)
 STUB_OP(65)
-STUB_OP(66)
 STUB_OP(67)
 STUB_OP(68)
 STUB_OP(69)
@@ -266,7 +316,6 @@ STUB_OP(85)
 STUB_OP(86)
 STUB_OP(87)
 STUB_OP(88)
-STUB_OP(89)
 STUB_OP(8A)
 STUB_OP(8B)
 STUB_OP(8C)

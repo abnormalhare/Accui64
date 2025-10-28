@@ -77,7 +77,7 @@ public:
     void run();
     void runStep();
 
-    void HALT();
+    bool HALT();
 
     ModRM *getModRM(RegType type);
     u64 getModRMPtr(ModRM *modrm, u32 &disp);
@@ -92,45 +92,48 @@ public:
 
     bool checkExceptions(u64 ptr, const std::vector<ExceptionType> &exceptions);
 
-    void OP_00(); void OP_01(); void OP_02(); void OP_03(); void OP_04(); void OP_05(); void OP_06(); void OP_07();
-    void OP_08(); void OP_09(); void OP_0A(); void OP_0B(); void OP_0C(); void OP_0D(); void OP_0E(); void OP_0F();
-    void OP_10(); void OP_11(); void OP_12(); void OP_13(); void OP_14(); void OP_15(); void OP_16(); void OP_17();
-    void OP_18(); void OP_19(); void OP_1A(); void OP_1B(); void OP_1C(); void OP_1D(); void OP_1E(); void OP_1F();
-    void OP_20(); void OP_21(); void OP_22(); void OP_23(); void OP_24(); void OP_25(); void OP_26(); void OP_27();
-    void OP_28(); void OP_29(); void OP_2A(); void OP_2B(); void OP_2C(); void OP_2D(); void OP_2E(); void OP_2F();
-    void OP_30(); void OP_31(); void OP_32(); void OP_33(); void OP_34(); void OP_35(); void OP_36(); void OP_37();
-    void OP_38(); void OP_39(); void OP_3A(); void OP_3B(); void OP_3C(); void OP_3D(); void OP_3E(); void OP_3F();
-    void OP_40(); void OP_41(); void OP_42(); void OP_43(); void OP_44(); void OP_45(); void OP_46(); void OP_47();
-    void OP_48(); void OP_49(); void OP_4A(); void OP_4B(); void OP_4C(); void OP_4D(); void OP_4E(); void OP_4F();
-    void OP_50(); void OP_51(); void OP_52(); void OP_53(); void OP_54(); void OP_55(); void OP_56(); void OP_57();
-    void OP_58(); void OP_59(); void OP_5A(); void OP_5B(); void OP_5C(); void OP_5D(); void OP_5E(); void OP_5F();
-    void OP_60(); void OP_61(); void OP_62(); void OP_63(); void OP_64(); void OP_65(); void OP_66(); void OP_67();
-    void OP_68(); void OP_69(); void OP_6A(); void OP_6B(); void OP_6C(); void OP_6D(); void OP_6E(); void OP_6F();
-    void OP_70(); void OP_71(); void OP_72(); void OP_73(); void OP_74(); void OP_75(); void OP_76(); void OP_77();
-    void OP_78(); void OP_79(); void OP_7A(); void OP_7B(); void OP_7C(); void OP_7D(); void OP_7E(); void OP_7F();
-    void OP_80(); void OP_81(); void OP_82(); void OP_83(); void OP_84(); void OP_85(); void OP_86(); void OP_87();
-    void OP_88(); void OP_89(); void OP_8A(); void OP_8B(); void OP_8C(); void OP_8D(); void OP_8E(); void OP_8F();
-    void OP_90(); void OP_91(); void OP_92(); void OP_93(); void OP_94(); void OP_95(); void OP_96(); void OP_97();
-    void OP_98(); void OP_99(); void OP_9A(); void OP_9B(); void OP_9C(); void OP_9D(); void OP_9E(); void OP_9F();
-    void OP_A0(); void OP_A1(); void OP_A2(); void OP_A3(); void OP_A4(); void OP_A5(); void OP_A6(); void OP_A7();
-    void OP_A8(); void OP_A9(); void OP_AA(); void OP_AB(); void OP_AC(); void OP_AD(); void OP_AE(); void OP_AF();
-    void OP_B0(); void OP_B1(); void OP_B2(); void OP_B3(); void OP_B4(); void OP_B5(); void OP_B6(); void OP_B7();
-    void OP_B8(); void OP_B9(); void OP_BA(); void OP_BB(); void OP_BC(); void OP_BD(); void OP_BE(); void OP_BF();
-    void OP_C0(); void OP_C1(); void OP_C2(); void OP_C3(); void OP_C4(); void OP_C5(); void OP_C6(); void OP_C7();
-    void OP_C8(); void OP_C9(); void OP_CA(); void OP_CB(); void OP_CC(); void OP_CD(); void OP_CE(); void OP_CF();
-    void OP_D0(); void OP_D1(); void OP_D2(); void OP_D3(); void OP_D4(); void OP_D5(); void OP_D6(); void OP_D7();
-    void OP_D8(); void OP_D9(); void OP_DA(); void OP_DB(); void OP_DC(); void OP_DD(); void OP_DE(); void OP_DF();
-    void OP_E0(); void OP_E1(); void OP_E2(); void OP_E3(); void OP_E4(); void OP_E5(); void OP_E6(); void OP_E7();
-    void OP_E8(); void OP_E9(); void OP_EA(); void OP_EB(); void OP_EC(); void OP_ED(); void OP_EE(); void OP_EF();
-    void OP_F0(); void OP_F1(); void OP_F2(); void OP_F3(); void OP_F4(); void OP_F5(); void OP_F6(); void OP_F7();
-    void OP_F8(); void OP_F9(); void OP_FA(); void OP_FB(); void OP_FC(); void OP_FD(); void OP_FE(); void OP_FF();
+    bool OP_00(); bool OP_01(); bool OP_02(); bool OP_03(); bool OP_04(); bool OP_05(); bool OP_06(); bool OP_07();
+    bool OP_08(); bool OP_09(); bool OP_0A(); bool OP_0B(); bool OP_0C(); bool OP_0D(); bool OP_0E(); bool OP_0F();
+    bool OP_10(); bool OP_11(); bool OP_12(); bool OP_13(); bool OP_14(); bool OP_15(); bool OP_16(); bool OP_17();
+    bool OP_18(); bool OP_19(); bool OP_1A(); bool OP_1B(); bool OP_1C(); bool OP_1D(); bool OP_1E(); bool OP_1F();
+    bool OP_20(); bool OP_21(); bool OP_22(); bool OP_23(); bool OP_24(); bool OP_25(); bool OP_26(); bool OP_27();
+    bool OP_28(); bool OP_29(); bool OP_2A(); bool OP_2B(); bool OP_2C(); bool OP_2D(); bool OP_2E(); bool OP_2F();
+    bool OP_30(); bool OP_31(); bool OP_32(); bool OP_33(); bool OP_34(); bool OP_35(); bool OP_36(); bool OP_37();
+    bool OP_38(); bool OP_39(); bool OP_3A(); bool OP_3B(); bool OP_3C(); bool OP_3D(); bool OP_3E(); bool OP_3F();
+    bool OP_40(); bool OP_41(); bool OP_42(); bool OP_43(); bool OP_44(); bool OP_45(); bool OP_46(); bool OP_47();
+    bool OP_48(); bool OP_49(); bool OP_4A(); bool OP_4B(); bool OP_4C(); bool OP_4D(); bool OP_4E(); bool OP_4F();
+    bool OP_50(); bool OP_51(); bool OP_52(); bool OP_53(); bool OP_54(); bool OP_55(); bool OP_56(); bool OP_57();
+    bool OP_58(); bool OP_59(); bool OP_5A(); bool OP_5B(); bool OP_5C(); bool OP_5D(); bool OP_5E(); bool OP_5F();
+    bool OP_60(); bool OP_61(); bool OP_62(); bool OP_63(); bool OP_64(); bool OP_65(); bool OP_66(); bool OP_67();
+    bool OP_68(); bool OP_69(); bool OP_6A(); bool OP_6B(); bool OP_6C(); bool OP_6D(); bool OP_6E(); bool OP_6F();
+    bool OP_70(); bool OP_71(); bool OP_72(); bool OP_73(); bool OP_74(); bool OP_75(); bool OP_76(); bool OP_77();
+    bool OP_78(); bool OP_79(); bool OP_7A(); bool OP_7B(); bool OP_7C(); bool OP_7D(); bool OP_7E(); bool OP_7F();
+    bool OP_80(); bool OP_81(); bool OP_82(); bool OP_83(); bool OP_84(); bool OP_85(); bool OP_86(); bool OP_87();
+    bool OP_88(); bool OP_89(); bool OP_8A(); bool OP_8B(); bool OP_8C(); bool OP_8D(); bool OP_8E(); bool OP_8F();
+    bool OP_90(); bool OP_91(); bool OP_92(); bool OP_93(); bool OP_94(); bool OP_95(); bool OP_96(); bool OP_97();
+    bool OP_98(); bool OP_99(); bool OP_9A(); bool OP_9B(); bool OP_9C(); bool OP_9D(); bool OP_9E(); bool OP_9F();
+    bool OP_A0(); bool OP_A1(); bool OP_A2(); bool OP_A3(); bool OP_A4(); bool OP_A5(); bool OP_A6(); bool OP_A7();
+    bool OP_A8(); bool OP_A9(); bool OP_AA(); bool OP_AB(); bool OP_AC(); bool OP_AD(); bool OP_AE(); bool OP_AF();
+    bool OP_B0(); bool OP_B1(); bool OP_B2(); bool OP_B3(); bool OP_B4(); bool OP_B5(); bool OP_B6(); bool OP_B7();
+    bool OP_B8(); bool OP_B9(); bool OP_BA(); bool OP_BB(); bool OP_BC(); bool OP_BD(); bool OP_BE(); bool OP_BF();
+    bool OP_C0(); bool OP_C1(); bool OP_C2(); bool OP_C3(); bool OP_C4(); bool OP_C5(); bool OP_C6(); bool OP_C7();
+    bool OP_C8(); bool OP_C9(); bool OP_CA(); bool OP_CB(); bool OP_CC(); bool OP_CD(); bool OP_CE(); bool OP_CF();
+    bool OP_D0(); bool OP_D1(); bool OP_D2(); bool OP_D3(); bool OP_D4(); bool OP_D5(); bool OP_D6(); bool OP_D7();
+    bool OP_D8(); bool OP_D9(); bool OP_DA(); bool OP_DB(); bool OP_DC(); bool OP_DD(); bool OP_DE(); bool OP_DF();
+    bool OP_E0(); bool OP_E1(); bool OP_E2(); bool OP_E3(); bool OP_E4(); bool OP_E5(); bool OP_E6(); bool OP_E7();
+    bool OP_E8(); bool OP_E9(); bool OP_EA(); bool OP_EB(); bool OP_EC(); bool OP_ED(); bool OP_EE(); bool OP_EF();
+    bool OP_F0(); bool OP_F1(); bool OP_F2(); bool OP_F3(); bool OP_F4(); bool OP_F5(); bool OP_F6(); bool OP_F7();
+    bool OP_F8(); bool OP_F9(); bool OP_FA(); bool OP_FB(); bool OP_FC(); bool OP_FD(); bool OP_FE(); bool OP_FF();
 
 private:
+    ModRM *getModRM16(RegType type);
+    ModRM *getModRM32(RegType type);
+    
     void determineModRMMod3(ModRM *modrm, RegType type);
     void determineModRMMod0to2(ModRM *modrm, RegType type);
     void determineModRMSib(ModRM *modrm, RegType type, u8 sib);
 
-    static const std::array<void (CPU::*)(), 0x100> opcode_table;
+    static const std::array<bool (CPU::*)(), 0x100> opcode_table;
     void initBind();
 
 public:

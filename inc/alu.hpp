@@ -7,3 +7,4 @@ template <typename Func>
 void calcOp(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result, Func func);
 
 void add(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
+void xorF(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
