@@ -75,7 +75,7 @@ public:
     void setupRegs();
 
     void run();
-    void runStep();
+    bool runStep();
 
     bool HALT();
 

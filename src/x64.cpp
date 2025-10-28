@@ -69,16 +69,14 @@ void CPU::run() {
 
     int i = 0;
     while (this->running) {
-        std::cout << "---------------------------" << std::endl << std::endl;
-        std::cout << "EIP: " << std::hex << (int)(CS->base + IP->e) << std::endl;
-
-        this->runStep();
+        if (this->runStep()) continue;
         
-        std::cout << std::endl;
+        std::cout << "---------------------------" << std::endl;
+        std::cout << "EIP: " << std::hex << std::uppercase << (int)(CS->base + IP->e) << std::endl << std::endl;
     }
 }
 
-void CPU::runStep() {
+bool CPU::runStep() {
     this->curr_inst = this->read();
 
     bool dont_clear = (this->*CPU::opcode_table[this->curr_inst])();
@@ -87,6 +85,7 @@ void CPU::runStep() {
         this->extra_info.clear();
         this->extra_info.insert({"rex", 0x00});
     }
+    return dont_clear;
 }
 
 void CPU::determineModRMMod3(ModRM *modrm, RegType type) {
@@ -423,11 +422,6 @@ void CPU::writeReg(u64 addr, Reg *reg, RegType type) {
     }, val);
 }
 
-bool CPU::HALT() {
-    this->running = false;
-    return false;
-}
-
 #define SET(n) t[0x##n] = &CPU::OP_##n;
 #define SET0F(n) t[0x##n] = &CPU::OP_0F_##n;
 
@@ -493,4 +487,9 @@ u32 CPU::getVal32() {
 
 bool CPU::checkExceptions(u64 ptr, const std::vector<ExceptionType> &exceptions) {
     return false;
+}
+
+bool CPU::HALT() {
+    this->running = false;
+    return true;
 }

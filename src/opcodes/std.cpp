@@ -142,7 +142,6 @@ bool CPU::OP_31() {
 bool CPU::OP_66() {
     this->extra_info.insert({"op", 1});
 
-    std::cout << "OPERAND PREFIX" << std::endl;
     return true;
 }
 
@@ -151,14 +150,46 @@ bool CPU::OP_89() {
         ModRM *modrm = this->getModRM(RegType::R16);
         u32 disp;
         u64 ptr = this->getModRMPtr(modrm, disp);
-        Reg *dst = new Reg(ptr);
+        Reg *dst = (modrm->_mod == 3) ? this->toReg(modrm->rm) : new Reg(ptr);
         Reg *src = this->toReg(modrm->reg);
 
         dst->set(modrm->reg_type, src->get(modrm->reg_type));
 
         debugPrint("MOV", modrm, disp, RM_R);
+        if (modrm->_mod != 3) {
+            this->writeReg(ptr, dst, modrm->reg_type);
+            delete dst;
+        }
+    }
+    return false;
+}
 
-        delete dst;
+bool CPU::OP_8C() {
+    if (!CR0->pe) {
+        ModRM *modrm = this->getModRM(RegType::R16);
+        u32 disp;
+        u64 ptr = this->getModRMPtr(modrm, disp);
+        Reg *dst = (modrm->_mod == 3) ? this->toReg(modrm->rm) : new Reg(ptr);
+        SegReg *src = &this->st_regs[modrm->_reg];
+
+        if (modrm->_mod != 3) {
+            modrm->reg_type = RegType::R16;
+        }
+
+        switch (modrm->reg_type) {
+            default: break;
+            
+            case RegType::R16: dst->set(modrm->reg_type, (u16)src->base); break;
+            case RegType::R32: dst->set(modrm->reg_type, src->base); break;
+        }
+        
+
+        modrm->reg_type = RegType::ST;
+        debugPrint("MOV", modrm, disp, RM_R);
+        if (modrm->_mod != 3) {
+            this->writeReg(ptr, dst, modrm->reg_type);
+            delete dst;
+        }
     }
     return false;
 }
@@ -207,7 +238,7 @@ STUB_OP(62)STUB_OP(63)STUB_OP(64)STUB_OP(65)STUB_OP(67)STUB_OP(68)STUB_OP(69)STU
 STUB_OP(6C)STUB_OP(6D)STUB_OP(6E)STUB_OP(6F)STUB_OP(70)STUB_OP(71)STUB_OP(72)STUB_OP(73)STUB_OP(74)
 STUB_OP(75)STUB_OP(76)STUB_OP(77)STUB_OP(78)STUB_OP(79)STUB_OP(7A)STUB_OP(7B)STUB_OP(7C)STUB_OP(7D)
 STUB_OP(7E)STUB_OP(7F)STUB_OP(80)STUB_OP(81)STUB_OP(82)STUB_OP(83)STUB_OP(84)STUB_OP(85)STUB_OP(86)
-STUB_OP(87)STUB_OP(88)STUB_OP(8A)STUB_OP(8B)STUB_OP(8C)STUB_OP(8D)STUB_OP(8E)STUB_OP(8F)STUB_OP(90)
+STUB_OP(87)STUB_OP(88)STUB_OP(8A)STUB_OP(8B)STUB_OP(8D)STUB_OP(8E)STUB_OP(8F)STUB_OP(90)
 STUB_OP(91)STUB_OP(92)STUB_OP(93)STUB_OP(94)STUB_OP(95)STUB_OP(96)STUB_OP(97)STUB_OP(98)STUB_OP(99)
 STUB_OP(9A)STUB_OP(9B)STUB_OP(9C)STUB_OP(9D)STUB_OP(9E)STUB_OP(9F)STUB_OP(A0)STUB_OP(A1)STUB_OP(A2)
 STUB_OP(A3)STUB_OP(A4)STUB_OP(A5)STUB_OP(A6)STUB_OP(A7)STUB_OP(A8)STUB_OP(A9)STUB_OP(AA)STUB_OP(AB)

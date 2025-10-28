@@ -30,9 +30,8 @@ static const char *r64_names[0x10] = {
     "R8",   "R9",  "R10", "R11",
    "R12", "R13", "R14", "R15",
 };
-static const char *st_names[0x8] = {
-    "ST(0)", "ST(1)", "ST(2)", "ST(3)",
-    "ST(4)", "ST(5)", "ST(6)", "ST(7)",
+static const char *st_names[0x6] = {
+    "ES", "CS", "SS", "DS", "FS", "GS",
 };
 static const char *mm_names[0x8] = {
     "MM0", "MM1", "MM2", "MM3",
@@ -74,8 +73,13 @@ const char *getRegPtrName(RegType type) {
 }
 
 void debugPrintMem(ModRM *modrm, u32 disp) {
+    if (modrm->_mod == 3) {
+        std::cout << getRegName(modrm->_rm, modrm->rm_type);
+        return;
+    }
+
     std::cout << getRegPtrName(modrm->reg_type) << " [";
-    
+
     if (!modrm->shouldUseSib()) {
         if (modrm->rm) {
             std::cout << getRegName(modrm->_rm, modrm->rm_type);
