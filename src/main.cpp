@@ -1,6 +1,6 @@
 #include "alu.cpp"
 #include "x64.cpp"
-#include "opcodes.cpp"
+#include "opcodes/std.cpp"
 #include "ram.cpp"
 
 int main(int argc, char *argv[]) {
