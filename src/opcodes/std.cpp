@@ -128,13 +128,16 @@ bool CPU::OP_29() {
         ModRM *modrm = this->getModRM(RegType::R16);
         u32 disp;
         u64 ptr = this->getModRMPtr(modrm, disp);
-        Reg *dst = new Reg(ptr);
+        Reg *dst = (modrm->_mod == 3) ? this->toReg(modrm->rm) : new Reg(ptr);
         Reg *src = this->toReg(modrm->reg);
 
         sub(this, modrm->reg_type, dst, src, dst);
-        this->writeReg(ptr, dst, modrm->reg_type);
 
         debugPrint("SUB", modrm, disp, 0, RM_R);
+        if (modrm->_mod != 3) {
+            this->writeReg(ptr, dst, modrm->reg_type);
+            delete dst;
+        }
 
         delete dst;
     }
@@ -146,13 +149,16 @@ bool CPU::OP_31() {
         ModRM *modrm = this->getModRM(RegType::R16);
         u32 disp;
         u64 ptr = this->getModRMPtr(modrm, disp);
-        Reg *dst = new Reg(ptr);
+        Reg *dst = (modrm->_mod == 3) ? this->toReg(modrm->rm) : new Reg(ptr);
         Reg *src = this->toReg(modrm->reg);
 
         xorF(this, modrm->reg_type, dst, src, dst);
-        this->writeReg(ptr, dst, modrm->reg_type);
 
         debugPrint("XOR", modrm, disp, 0, RM_R);
+        if (modrm->_mod != 3) {
+            this->writeReg(ptr, dst, modrm->reg_type);
+            delete dst;
+        }
 
         delete dst;
     }
