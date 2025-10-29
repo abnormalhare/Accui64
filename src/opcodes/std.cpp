@@ -4,6 +4,7 @@
 
 #include "../../inc/subop.hpp"
 
+#include <ios>
 #include <vector>
 
 #include "0F.cpp"
@@ -196,6 +197,23 @@ bool CPU::OP_8C() {
     return false;
 }
 
+bool CPU::OP_BB() {
+    if (!CR0->pe) {
+        if (!this->extra_info.contains("op")) {
+            u16 val = this->getVal16();
+            BX->set(RegType::R16, val);
+            
+            std::cout << "MOV BX, " << std::hex << std::uppercase << (int)val << std::endl;
+        } else {
+            u32 val = this->getVal32();
+            BX->set(RegType::R32, val);
+            
+            std::cout << "MOV EBX, " << std::hex << std::uppercase << (int)val << std::endl;
+        }
+    }
+    return false;
+}
+
 bool CPU::OP_C1() {
     ModRM *modrm = this->getModRM(RegType::R16);
     return subop_c1_table[modrm->_reg](this, modrm);
@@ -250,7 +268,7 @@ STUB_OP(91)STUB_OP(92)STUB_OP(93)STUB_OP(94)STUB_OP(95)STUB_OP(96)STUB_OP(97)STU
 STUB_OP(9A)STUB_OP(9B)STUB_OP(9C)STUB_OP(9D)STUB_OP(9E)STUB_OP(9F)STUB_OP(A0)STUB_OP(A1)STUB_OP(A2)
 STUB_OP(A3)STUB_OP(A4)STUB_OP(A5)STUB_OP(A6)STUB_OP(A7)STUB_OP(A8)STUB_OP(A9)STUB_OP(AA)STUB_OP(AB)
 STUB_OP(AC)STUB_OP(AD)STUB_OP(AE)STUB_OP(AF)STUB_OP(B0)STUB_OP(B1)STUB_OP(B2)STUB_OP(B3)STUB_OP(B4)
-STUB_OP(B5)STUB_OP(B6)STUB_OP(B7)STUB_OP(B8)STUB_OP(B9)STUB_OP(BA)STUB_OP(BB)STUB_OP(BC)STUB_OP(BD)
+STUB_OP(B5)STUB_OP(B6)STUB_OP(B7)STUB_OP(B8)STUB_OP(B9)STUB_OP(BA)STUB_OP(BC)STUB_OP(BD)
 STUB_OP(BE)STUB_OP(BF)STUB_OP(C0)STUB_OP(C2)STUB_OP(C3)STUB_OP(C4)STUB_OP(C5)STUB_OP(C6)
 STUB_OP(C7)STUB_OP(C8)STUB_OP(C9)STUB_OP(CA)STUB_OP(CB)STUB_OP(CC)STUB_OP(CD)STUB_OP(CE)STUB_OP(CF)
 STUB_OP(D0)STUB_OP(D1)STUB_OP(D2)STUB_OP(D3)STUB_OP(D4)STUB_OP(D5)STUB_OP(D6)STUB_OP(D7)STUB_OP(D8)
