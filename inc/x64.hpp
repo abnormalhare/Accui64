@@ -100,6 +100,8 @@ private:
     void determineModRMMod0to2(ModRM *modrm, RegType type);
     void determineModRMSib(ModRM *modrm, RegType type, u8 sib);
 
+    void debugPrintRegs();
+
     static const std::array<bool (CPU::*)(), 0x100> opcode_table;
     static const std::array<bool (CPU::*)(), 0x100> opcode_table_0F;
     void initBind();

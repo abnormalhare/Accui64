@@ -1,8 +1,10 @@
+#include "../inc/debug.hpp"
 #include "../inc/ram.hpp"
+#include "../inc/x64.hpp"
 #include <immintrin.h>
+#include <iomanip>
 #include <iostream>
 #include <variant>
-#include "../inc/x64.hpp"
 
 CPU::CPU() {
     this->extra_info = std::unordered_map<const char *, u8>();
@@ -67,10 +69,13 @@ void CPU::setupRegs() {
 void CPU::run() {
     this->extra_info.insert({"rex", 0x00});
 
-    int i = 0;
+    std::cout << "---------------------------" << std::endl;
+    std::cout << "EIP: " << std::hex << std::uppercase << (int)(CS->base + IP->e) << std::endl << std::endl;
     while (this->running) {
         if (this->runStep()) continue;
         
+        std::cout << std::endl;
+        this->debugPrintRegs();
         std::cout << "---------------------------" << std::endl;
         std::cout << "EIP: " << std::hex << std::uppercase << (int)(CS->base + IP->e) << std::endl << std::endl;
     }
@@ -86,6 +91,160 @@ bool CPU::runStep() {
         this->extra_info.insert({"rex", 0x00});
     }
     return dont_clear;
+}
+
+u8 CPU::read() {
+    u8 ret = RAM::read(CS->base + IP->e);
+    IP->x++;
+
+    return ret;
+}
+
+void CPU::write(u64 addr, u8 val) {
+    RAM::write(addr, val);
+}
+
+void CPU::writeReg(u64 addr, Reg *reg, RegType type) {
+    auto val = reg->get(type);
+    std::visit([&](auto write) {
+        using T = decltype(write);
+
+        for (int i = 0; i < sizeof(T); i++) {
+            this->write(addr + i, write >> (i * 8));
+        }
+    }, val);
+}
+
+u8 CPU::getVal8() {
+    return this->read();
+}
+
+u16 CPU::getVal16() {
+    return this->read() + (this->read() << 8);
+}
+
+u32 CPU::getVal32() {
+    u32 val = this->read();
+    val |= static_cast<u32>(this->read()) << 8;
+    val |= static_cast<u32>(this->read()) << 16;
+    val |= static_cast<u32>(this->read()) << 24;
+    return val;
+}
+
+bool CPU::checkExceptions(u64 ptr, const std::vector<ExceptionType> &exceptions) {
+    // Check for basic protection faults
+    if (CR0->pe) {  // Protected mode checks
+        for (const auto &exception : exceptions) {
+            switch (exception) {
+                case ExceptionType::DE:  // Divide Error
+                    // Handled during division operations
+                    break;
+                    
+                case ExceptionType::DB:  // Debug Exception
+                    // Check debug registers if any breakpoints are hit
+                    for (int i = 0; i < 4; i++) {
+                        if (DR7->get_enable(i) && ptr == this->db_regs[i]) return true;
+                    }
+                    break;
+                    
+                case ExceptionType::NMI:  // Non-Maskable Interrupt
+                    // External hardware interrupt, not checked here
+                    break;
+                    
+                case ExceptionType::BP:  // Breakpoint
+                    // Software triggered (INT3), not checked here
+                    break;
+                    
+                case ExceptionType::OF:  // Overflow
+                    // Handled in arithmetic operations
+                    break;
+                    
+                case ExceptionType::BR:  // BOUND Range exceeded
+                    // Handled in BOUND instruction
+                    break;
+                    
+                case ExceptionType::UD:  // Invalid Opcode
+                    // Handled during instruction decode
+                    break;
+                    
+                case ExceptionType::NM:  // Device Not Available
+                    if (CR0->em || CR0->ts) return true;
+                    break;
+                    
+                case ExceptionType::DF:  // Double Fault
+                    // Complex exception handling, not implemented here
+                    break;
+                    
+                case ExceptionType::CSO:  // Coprocessor Segment Overrun
+                    // Legacy exception, not used in modern CPUs
+                    break;
+                    
+                case ExceptionType::TS:  // Invalid TSS
+                    // Task switching not implemented yet
+                    break;
+                    
+                case ExceptionType::NP:  // Segment Not Present
+                    // Check segment presence
+                    if (!(CS->attr & 0x80)) return true;
+                    break;
+                    
+                case ExceptionType::SS:  // Stack Segment Fault
+                    // Check stack segment access
+                    if ((ptr >= SS->base) && (ptr <= SS->base + SS->limit)) {
+                        if (!(SS->attr & 0x2)) return true;  // Write protect check
+                    }
+                    break;
+                    
+                case ExceptionType::GP:  // General Protection Fault
+                    // Check segment limits and privileges
+                    if (ptr > CS->limit) return true;
+                    break;
+                    
+                case ExceptionType::PF:  // Page Fault
+                    if (CR0->pg) {  // Paging enabled
+                        // Basic page presence check
+                        // Note: Full paging implementation would need page table walk
+                        if (ptr > 0xFFFFFFFF) return true;
+                    }
+                    break;
+                    
+                case ExceptionType::MF:  // x87 FPU Floating-Point Error
+                    // FPU errors handled separately
+                    break;
+                    
+                case ExceptionType::AC:  // Alignment Check
+                    if (CR0->am && (RFLAGS.ac)) {
+                        if (ptr & 0x3) return true;  // Check if address is aligned
+                    }
+                    break;
+                    
+                case ExceptionType::MC:  // Machine Check
+                    // Hardware-level errors, not implemented
+                    break;
+                    
+                case ExceptionType::XM:  // SIMD Floating-Point Exception
+                    // SIMD errors handled separately
+                    break;
+                    
+                case ExceptionType::VE:  // Virtualization Exception
+                    // Virtualization events not implemented
+                    break;
+                    
+                case ExceptionType::SX:  // Security Exception
+                    // Security violations not implemented
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+    }
+    return false;
+}
+
+bool CPU::HALT() {
+    this->running = false;
+    return true;
 }
 
 void CPU::determineModRMMod3(ModRM *modrm, RegType type) {
@@ -400,26 +559,18 @@ u64 CPU::getModRMPtr(ModRM *modrm, u32 &disp) {
     return val;
 }
 
-u8 CPU::read() {
-    u8 ret = RAM::read(CS->base + IP->e);
-    IP->x++;
-
-    return ret;
-}
-
-void CPU::write(u64 addr, u8 val) {
-    RAM::write(addr, val);
-}
-
-void CPU::writeReg(u64 addr, Reg *reg, RegType type) {
-    auto val = reg->get(type);
-    std::visit([&](auto write) {
-        using T = decltype(write);
-
-        for (int i = 0; i < sizeof(T); i++) {
-            this->write(addr + i, write >> (i * 8));
-        }
-    }, val);
+void CPU::debugPrintRegs() {
+    for (int i = 0; i < 0x10; i += 4) {
+        std::cout << std::setw(3) << std::setfill(' ') << getRegName(i + 0, RegType::R64) << ": "
+                  << std::hex << std::uppercase << std::setw(16) << std::setfill('0') << this->regs[i + 0].r << "  "
+                  << std::setw(3) << std::setfill(' ') << getRegName(i + 1, RegType::R64) << ": "
+                  << std::hex << std::uppercase << std::setw(16) << std::setfill('0') << this->regs[i + 1].r << "  "
+                  << std::setw(3) << std::setfill(' ') << getRegName(i + 2, RegType::R64) << ": "
+                  << std::hex << std::uppercase << std::setw(16) << std::setfill('0') << this->regs[i + 2].r << "  "
+                  << std::setw(3) << std::setfill(' ') << getRegName(i + 3, RegType::R64) << ": "
+                  << std::hex << std::uppercase << std::setw(16) << std::setfill('0') << this->regs[i + 3].r
+                  << std::endl;
+    }
 }
 
 #define SET(n) t[0x##n] = &CPU::OP_##n;
@@ -472,24 +623,3 @@ static constexpr std::array<bool (CPU::*)(), 0x100> make_opcode_table_0F() {
 
 const std::array<bool (CPU::*)(), 0x100> CPU::opcode_table = make_opcode_table();
 const std::array<bool (CPU::*)(), 0x100> CPU::opcode_table_0F = make_opcode_table_0F();
-
-u8 CPU::getVal8() {
-    return this->read();
-}
-
-u16 CPU::getVal16() {
-    return this->read() + (this->read() << 8);
-}
-
-u32 CPU::getVal32() {
-    return this->read() + (this->read() << 8) + (this->read() << 16) + (this->read() << 24);
-}
-
-bool CPU::checkExceptions(u64 ptr, const std::vector<ExceptionType> &exceptions) {
-    return false;
-}
-
-bool CPU::HALT() {
-    this->running = false;
-    return true;
-}

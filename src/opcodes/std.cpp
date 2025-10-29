@@ -85,7 +85,7 @@ bool CPU::OP_04() {
         return a + b;
     });
 
-    std::cout << "ADD AX, " << (int)src->l << std::endl;
+    std::cout << "ADD AL, " << (int)src->l << std::endl;  // Print AL since we're operating on 8-bit
 
     delete src;
     return false;
@@ -108,7 +108,7 @@ bool CPU::OP_05() {
         src->e = val = this->getVal32();
     }
 
-    calcOp(this, RegType::R8, dst, src, dst, [](CPU *cpu, auto a, auto b) {
+    calcOp(this, src_type, dst, src, dst, [](CPU *cpu, auto a, auto b) {
         return a + b;
     });
 
@@ -181,8 +181,8 @@ bool CPU::OP_8C() {
         switch (modrm->reg_type) {
             default: break;
             
-            case RegType::R16: dst->set(modrm->reg_type, (u16)src->base); break;
-            case RegType::R32: dst->set(modrm->reg_type, src->base); break;
+            case RegType::R16: dst->set(modrm->reg_type, (u16)src->selector); break;
+            case RegType::R32: dst->set(modrm->reg_type, src->selector); break;
         }
         
 

@@ -1,21 +1,5 @@
 #include "../inc/alu.hpp"
 #include "../inc/x64.hpp"
-#include <variant>
-
-template <typename Func>
-void calcOp(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result, Func func) {
-    auto va = a->get(type);
-    auto vb = b->get(type);
-
-    std::visit([&](auto lhs, auto rhs) {
-        using T = decltype(lhs);
-        using U = decltype(rhs);
-
-        if constexpr(std::is_same_v<T, U>) {
-            result->set(type, static_cast<T>(func(cpu, lhs, rhs)));
-        }
-    }, va, vb);
-}
 
 template<typename T>
 static u8 get_parity(T res) {
@@ -55,11 +39,33 @@ void xorF(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result) {
         u64 topbit = (1ULL << (bits - 1));
 
         cpu->RFLAGS.cf = 0;
-        cpu->RFLAGS.of = 0;
         cpu->RFLAGS.pf = get_parity<T>(res);
+        cpu->RFLAGS.af = 0;
         cpu->RFLAGS.zf = (res == 0);
         cpu->RFLAGS.sf = (res >> (bits - 1)) & 1;
+        cpu->RFLAGS.of = 0;
+
+        return res;
+    });
+}
+
+void shl(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result) {
+    calcOp(cpu, type, a, b, result, [](CPU *cpu, auto a, auto b) {
+        using T = decltype(a);
+        constexpr int bits = sizeof(T) * 8;
+        
+        T res = a << (b - 1);
+        u8 topbit = getMask(res, bits - 1, bits - 1) & 1;
+        res <<= 1;
+
+        cpu->RFLAGS.cf = topbit;
+        cpu->RFLAGS.pf = get_parity<T>(res);
         cpu->RFLAGS.af = 0;
+        cpu->RFLAGS.zf = (res == 0);
+        cpu->RFLAGS.sf = getMask(res, bits - 1, bits - 1) & 1;
+        if (b == 1) {
+            cpu->RFLAGS.of = (cpu->RFLAGS.sf == cpu->RFLAGS.cf);
+        }
 
         return res;
     });

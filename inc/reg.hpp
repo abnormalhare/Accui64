@@ -25,7 +25,7 @@ enum REXBit {
 
 enum ExceptionType {
     DE, DB, NMI, BP, OF, BR, UD, NM, DF, CSO,
-    TS, NP, SS, GP, PF, _0, MF, AC, MC, XF,
+    TS, NP, SS, GP, PF, _0, MF, AC, MC, XM,
     VE, CP, _1, HV, VC, SX, _3,
 };
 
@@ -248,6 +248,16 @@ struct DR7 {
     u8 dr2_size : 2;
     u8 dr3_cond : 2;
     u8 dr3_size : 2;
+
+    bool get_enable(int reg) const {
+        switch (reg) {
+            case 0: return lbp_dr0 | gbp_dr0;
+            case 1: return lbp_dr1 | gbp_dr1;
+            case 2: return lbp_dr2 | gbp_dr2;
+            case 3: return lbp_dr3 | gbp_dr3;
+            default: return false;
+        }
+    }
 };
 
 struct GDTR {
