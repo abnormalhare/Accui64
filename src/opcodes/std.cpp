@@ -123,6 +123,24 @@ bool CPU::OP_0F() {
     return (this->*CPU::opcode_table_0F[this->read()])();
 }
 
+bool CPU::OP_29() {
+    if (!CR0->pe) {
+        ModRM *modrm = this->getModRM(RegType::R16);
+        u32 disp;
+        u64 ptr = this->getModRMPtr(modrm, disp);
+        Reg *dst = new Reg(ptr);
+        Reg *src = this->toReg(modrm->reg);
+
+        sub(this, modrm->reg_type, dst, src, dst);
+        this->writeReg(ptr, dst, modrm->reg_type);
+
+        debugPrint("SUB", modrm, disp, 0, RM_R);
+
+        delete dst;
+    }
+    return false;
+}
+
 bool CPU::OP_31() {
     if (!CR0->pe) {
         ModRM *modrm = this->getModRM(RegType::R16);
@@ -252,7 +270,7 @@ bool CPU::OP_##hex() { std::cout << "UNIMPLEMENTED OPCODE 0x" #hex << std::endl;
 STUB_OP(06)STUB_OP(07)STUB_OP(08)STUB_OP(09)STUB_OP(0A)STUB_OP(0B)STUB_OP(0C)STUB_OP(0D)STUB_OP(0E)
 STUB_OP(10)STUB_OP(11)STUB_OP(12)STUB_OP(13)STUB_OP(14)STUB_OP(15)STUB_OP(16)STUB_OP(17)STUB_OP(18)
 STUB_OP(19)STUB_OP(1A)STUB_OP(1B)STUB_OP(1C)STUB_OP(1D)STUB_OP(1E)STUB_OP(1F)STUB_OP(20)STUB_OP(21)
-STUB_OP(22)STUB_OP(23)STUB_OP(24)STUB_OP(25)STUB_OP(26)STUB_OP(27)STUB_OP(28)STUB_OP(29)STUB_OP(2A)
+STUB_OP(22)STUB_OP(23)STUB_OP(24)STUB_OP(25)STUB_OP(26)STUB_OP(27)STUB_OP(28)STUB_OP(2A)
 STUB_OP(2B)STUB_OP(2C)STUB_OP(2D)STUB_OP(2E)STUB_OP(2F)STUB_OP(30)STUB_OP(32)STUB_OP(33)STUB_OP(34)
 STUB_OP(35)STUB_OP(36)STUB_OP(37)STUB_OP(38)STUB_OP(39)STUB_OP(3A)STUB_OP(3B)STUB_OP(3C)STUB_OP(3D)
 STUB_OP(3E)STUB_OP(3F)STUB_OP(40)STUB_OP(41)STUB_OP(42)STUB_OP(43)STUB_OP(44)STUB_OP(45)STUB_OP(46)

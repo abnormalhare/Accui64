@@ -20,5 +20,6 @@ void calcOp(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result, Fun
 }
 
 void add(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
+void sub(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
 void shl(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
 void xorF(CPU *cpu, RegType type, const Reg *a, const Reg *b, Reg *result);
