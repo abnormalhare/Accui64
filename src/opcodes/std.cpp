@@ -79,43 +79,37 @@ bool CPU::OP_03() {
 
 bool CPU::OP_04() {
     Reg *dst = AX;
-    Reg *src = new Reg();
-    src->l = this->getVal8();
+    Reg src = Reg();
+    src.l = this->getVal8();
 
-    calcOp(this, RegType::R8, dst, src, dst, [](CPU *cpu, auto a, auto b) {
-        return a + b;
-    });
+    add(this, RegType::R8, dst, &src, dst);
 
-    std::cout << "ADD AL, " << (int)src->l << std::endl;  // Print AL since we're operating on 8-bit
+    std::cout << "ADD AL, " << (int)src.l << std::endl;  // Print AL since we're operating on 8-bit
 
-    delete src;
     return false;
 }
 
 bool CPU::OP_05() {
     Reg *dst = AX;
-    Reg *src = new Reg();
+    Reg src = Reg();
     RegType src_type;
     u32 val;
 
     if (this->extra_info.contains("op")) {
         src_type = RegType::R16;
-        src->x = val = this->getVal16();
+        src.x = val = this->getVal16();
     } else if (this->extra_info["rex"] & REXBit::W) {
         src_type = RegType::R64;
-        src->r = val = this->getVal32();
+        src.r = val = this->getVal32();
     } else {
         src_type = RegType::R32;
-        src->e = val = this->getVal32();
+        src.e = val = this->getVal32();
     }
 
-    calcOp(this, src_type, dst, src, dst, [](CPU *cpu, auto a, auto b) {
-        return a + b;
-    });
+    add(this, src_type, dst, &src, dst);
 
     std::cout << "ADD " << getRegName(0, src_type) << ", " << std::hex << val << std::endl;
 
-    delete src;
     return false;
 }
 
@@ -138,8 +132,6 @@ bool CPU::OP_29() {
             this->writeReg(ptr, dst, modrm->reg_type);
             delete dst;
         }
-
-        delete dst;
     }
     return false;
 }
@@ -159,8 +151,6 @@ bool CPU::OP_31() {
             this->writeReg(ptr, dst, modrm->reg_type);
             delete dst;
         }
-
-        delete dst;
     }
 
     return false;
